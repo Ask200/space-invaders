@@ -1,0 +1,161 @@
+
+# ********************************************************************SPACE-INVADERS********************************************************************
+
+import pygame
+import random
+import math
+
+pygame.init()
+
+pygame.display.set_caption('space hunter')
+# screen banavli
+
+screen = pygame.display.set_mode((800, 600))
+# background
+background = pygame.image.load('background.png')
+
+# logo thevla
+
+icon = pygame.image.load('spaceship.png')
+pygame.display.set_icon(icon)
+
+# player icon
+
+playerImg = pygame.image.load('space-invaders.png')
+playerX = 370  # co-ordinates for player image.
+playerY = 480
+playerX_change = 0
+playerY_change = 0
+
+# enemy icon
+enemyImg = []
+enemyX = []
+enemyY = []
+enemyX_change = []
+enemyY_change = []
+num_of_enemies = 4
+for i in range(num_of_enemies):
+    enemyImg.append(pygame.image.load('ufo (1).png'))
+    enemyX.append(random.randint(0, 750))
+    enemyY.append(random.randint(50, 150))
+    enemyX_change.append(2)
+    enemyY_change.append(30)
+
+# bullet
+bulletImg = pygame.image.load('bullet.png')
+bulletX = 0  # since bullet is not gonna move in x direction
+bulletY = 480  # since bullet is to be shot from the spaceship from its tip so both has to be equal
+# bulletX_change = 0
+bulletY_change = 10
+bullet_state = "ready"  # ready-bullet is not moving on the screen //fire - bullet is moving
+# sore
+score_value = 0
+font = pygame.font.Font('freesansbold.ttf', 32)
+textX = 10
+testY = 10
+
+
+def show_score(x, y):
+    score = font.render("score : " + str(score_value), True, (255, 255, 255))
+    screen.blit(score, (x, y))
+
+
+def player(x, y, ):
+    screen.blit(playerImg, (x, y))  # this function is to draw player on the screen
+
+
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))  # this function is to draw enemy on the screen
+
+
+def fire_bullet(x, y):
+    global bullet_state
+    bullet_state = "fire"
+    screen.blit(bulletImg, (x + 16, y))
+
+
+def is_collision(bulletX, bulletY, enemyX, enemyY):
+    distance = math.sqrt(math.pow(enemyX - bulletX, 2) + math.pow(bulletY - enemyY, 2))
+    if distance <= 32:
+        return True
+    else:
+        return False
+
+
+run = True
+while run:
+    screen.fill((40, 60, 100))
+    screen.blit(background, (0, 0))                # to make background permanent
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if event.type == pygame.KEYDOWN:           # if some key is pressed
+            if event.key == pygame.K_LEFT:
+                playerX_change = -5
+            if event.key == pygame.K_RIGHT:
+                playerX_change = 5
+            if event.key == pygame.K_SPACE:
+                bulletX = playerX
+                fire_bullet(bulletX, bulletY)
+            # if  event.key == pygame.K_UP:
+            #    playerY_change = -0.1
+            # if event.key == pygame.K_DOWN:
+            #   playerY_change = 0.1
+            if event.type == pygame.KEYUP:                               # if some key is released
+                if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                    playerX_change = 0
+            # if  event.key == pygame.K_UP or event.key == pygame.K_DOWN :
+            #    playerY_change = 0
+
+    playerX += playerX_change
+    # checking boundaries for the player so it do not goes out of bound
+
+    if playerX <= 0:
+        playerX = 0
+    elif playerX >= 736:              # 800- 64(image size)
+        playerX = 736
+  ******  # enemy movement ********
+    
+    
+    for i in range(num_of_enemies):
+        enemyX[i] += enemyX_change[i]
+        if enemyX[i] <= 0:
+
+            enemyX_change[i] = 4
+            enemyY[i] += enemyY_change[i]
+        elif enemyX[i] >= 736:  # 800- 64(image size)
+            enemyX_change[i] = -4
+            enemyY[i] += enemyY_change[i]
+            # collison
+        collision = is_collision(bulletX, bulletY, enemyX[i], enemyY[i])
+        if collision:
+            bulletY = 480                            # to reset the bullet position to original
+            bullet_state = "ready"
+            score_value += 1
+            print(score_value)
+            enemyX[i] = random.randint(0, 750)       # random co-ordinates for enemy after hitting to respawn.
+            enemyY[i] = random.randint(50, 150)
+        enemy(enemyX[i], enemyY[i], i)
+
+********* # bullet movement********* 
+    if bulletY <= 0:  # for multiple bullets
+        bulletY = 480
+        bullet_state = "ready"
+    if bullet_state is "fire":
+        fire_bullet(bulletX, bulletY)
+        bulletY -= bulletY_change
+    # collison for single enemy
+    #  collision = is_collision(bulletX, bulletY, enemyX, enemyY)
+    # if collision:
+    #   bulletY = 480  # to reset the bullet position to original
+
+    #  bullet_state = "ready"
+    # score += 1
+    # print(score)
+    # enemyX = random.randint(0, 750)           # random co-ordinates for enemy after hitting to respawn.
+    # enemyY = random.randint(50, 150)
+    player(playerX, playerY)                    # calling in loop bc nehmi asayla pahije screen vaar.
+    # enemy(enemyX, enemyY)
+    show_score(textX, testY)
+    pygame.display.update()
